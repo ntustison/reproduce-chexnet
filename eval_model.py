@@ -67,8 +67,8 @@ def make_pred_multilabel(data_transforms, model, PATH_TO_IMAGES):
                 thisrow["prob_" + dataset.PRED_LABEL[k]] = probs[j, k]
                 truerow[dataset.PRED_LABEL[k]] = true_labels[j, k]
 
-            pred_df = pred_df.append(thisrow, ignore_index=True)
-            true_df = true_df.append(truerow, ignore_index=True)
+            pred_df = pred_df._append(thisrow, ignore_index=True)
+            true_df = true_df._append(truerow, ignore_index=True)
 
         if(i % 10 == 0):
             print(str(i * BATCH_SIZE))
@@ -101,10 +101,10 @@ def make_pred_multilabel(data_transforms, model, PATH_TO_IMAGES):
         thisrow['auc'] = np.nan
         try:
             thisrow['auc'] = sklm.roc_auc_score(
-                actual.as_matrix().astype(int), pred.as_matrix())
+                actual.to_numpy().astype(int), pred.to_numpy())
         except BaseException:
             print("can't calculate auc for " + str(column))
-        auc_df = auc_df.append(thisrow, ignore_index=True)
+        auc_df = auc_df._append(thisrow, ignore_index=True)
 
     pred_df.to_csv("results/preds.csv", index=False)
     auc_df.to_csv("results/aucs.csv", index=False)
