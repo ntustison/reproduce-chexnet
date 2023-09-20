@@ -100,7 +100,7 @@ model = tf.keras.applications.DenseNet121(include_top=True,
                                           classifier_activation='sigmoid')
 
 weights_filename = scripts_directory + "xray_classification_with_spatial_priors.h5"
-model.compile(optimizer=tf.keras.optimizers.legacy.SGD(lr=0.01, momentum=0.9, decay=1e-4),
+model.compile(optimizer=tf.keras.optimizers.legacy.SGD(learning_rate=0.01, momentum=0.9, decay=1e-4),
               loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
               metrics=[tf.keras.metrics.BinaryAccuracy()])
 

@@ -22,7 +22,7 @@ def batch_generator(batch_size,
         for i in range(batch_size):
             X[i,:,:,2] = population_prior.numpy()
         Y  = np.zeros((batch_size, demo.shape[1]))
-
+        
         batch_count = 0
         while batch_count < batch_size:
             # randomly but uniformly choose a condition and then randomly select 
@@ -32,10 +32,10 @@ def batch_generator(batch_size,
             random_index = int(random.sample(list(condition_indices.flatten()), 1)[0])     
             base_image_file = image_files[random_index]
             base_image_file = base_image_file.replace(".png", ".nii.gz")
-            image_file = glob.glob("/home/ntustison/Data/XRayCT/Data/Nifti/*/" + base_image_file)
+            image_file = glob.glob("/home/ntustison/Data/reproduce-chexnet/data/nifti/" + base_image_file)
             if len(image_file) > 0:
                 image_file = image_file[0]
-                mask_file = image_file.replace("Nifti", "Masks")
+                mask_file = image_file.replace("nifti", "masks")
                 if not os.path.exists(image_file) or not os.path.exists(mask_file):
                     continue
                 image = ants.image_read(image_file)
@@ -43,7 +43,7 @@ def batch_generator(batch_size,
                 if image.components > 1:
                     image_channels = ants.split_channels(image)
                     image = (image_channels[0] + image_channels[1] + image_channels[2]) / 3
-                image = ants.resample_image(image, image_size, use_voxels=True, interp_type=0)   
+                image = ants.resample_image(image, image_size, use_voxels=True, interp_type=0)  
                 if len(image.shape) == 2 and image.components == 1 and image.shape == image_size: 
                     mask = ants.resample_image(mask, image_size, use_voxels=True, interp_type=1)    
                     if do_augmentation:

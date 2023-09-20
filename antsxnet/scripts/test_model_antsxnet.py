@@ -50,7 +50,7 @@ for i in range(len(unique_labels)):
 
 unique_labels = unique(unique_labels_unroll)
 
-testing_demo_file = base_directory + "training_demo.npy"
+testing_demo_file = base_directory + "testing_demo.npy"
 testing_demo = None
 if os.path.exists(testing_demo_file):
     testing_demo = np.load(testing_demo_file)
