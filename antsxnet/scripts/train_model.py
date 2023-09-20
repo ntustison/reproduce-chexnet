@@ -24,12 +24,13 @@ K.clear_session()
 
 tf.compat.v1.disable_eager_execution()
 
-base_directory = '/home/ntustison/Data/XRayCT/'
-# base_directory = '/Users/ntustison/Data/Public/XRayCT/'
-scripts_directory = base_directory + 'Scripts/'
-data_directory = base_directory + "Data/"
+base_directory = '/home/ntustison/Data/reproduce-chexnet/'
+scripts_directory = base_directory + 'antsxnet/scripts/'
+data_directory = base_directory + "data/"
 
-population_prior = ants.image_read(data_directory + "leftRightPrior.nii.gz")
+population_prior = ants.image_read(antspynet.get_antsxnet_data("xrayLungPriors"))
+population_prior = (ants.slice_image(population_prior, axis=2, idx=0, collapse_strategy=1) +
+                    ants.slice_image(population_prior, axis=2, idx=1, collapse_strategy=1))
 image_size=(224, 224)
 population_prior = ants.resample_image(population_prior, image_size, use_voxels=True)
 
@@ -39,16 +40,13 @@ population_prior = ants.resample_image(population_prior, image_size, use_voxels=
 #
 ################################################
 
-train_images_file = base_directory + "CXR8-selected/train_val_list.txt"
+train_images_file = base_directory + "antsxnet/train_val_list.txt"
 with open(train_images_file) as f:
     train_images_list = f.readlines()
 f.close()
 train_images_list = [x.strip() for x in train_images_list]
 
-demo2017_file = base_directory + "CXR8-selected/BBox_List_2017.csv"
-demo2017 = pd.read_csv(demo2017_file)
-
-demo_file = base_directory + "CXR8-selected/Data_Entry_2017_v2020.csv"
+demo_file = base_directory + "antsxnet/Data_Entry_2017_v2020.csv"
 demo = pd.read_csv(demo_file)
 
 def unique(list1):
@@ -70,7 +68,7 @@ for i in range(len(unique_labels)):
 
 unique_labels = unique(unique_labels_unroll)
 
-training_demo_file = base_directory + "training_demo.npy"
+training_demo_file = data_directory + "training_demo.npy"
 training_demo = None
 if os.path.exists(training_demo_file):
     training_demo = np.load(training_demo_file)
@@ -101,54 +99,7 @@ model = tf.keras.applications.DenseNet121(include_top=True,
                                           classes=number_of_classification_labels, 
                                           classifier_activation='sigmoid')
 
-# model = antspynet.create_resnet_model_2d((None, None, 3),
-#   number_of_classification_labels=number_of_classification_labels,
-#   mode="regression",
-#   layers=(1, 2, 3, 4),
-#   residual_block_schedule=(2, 2, 2, 2), lowest_resolution=64,
-#   cardinality=1, squeeze_and_excite=False)
-
-# model = antspynet.create_resnet_model_2d((None, None, 1),
-#    number_of_classification_labels=number_of_classification_labels,
-#    mode="regression",
-#    layers=(1, 2, 3, 4),
-#    residual_block_schedule=(3, 4, 6, 3), lowest_resolution=64,
-#    cardinality=1, squeeze_and_excite=False)
-
 weights_filename = scripts_directory + "xray_classification_with_spatial_priors.h5"
-weights_filename_single_channel = scripts_directory + "xray_classification.h5"
-if os.path.exists(weights_filename):
-    model.load_weights(weights_filename)
-elif os.path.exists(weights_filename_single_channel):
-    single_channel_model = antspynet.create_resnet_model_2d((None, None, 1),
-            number_of_classification_labels=number_of_classification_labels,
-            mode="classification",
-            layers=(1, 2, 3, 4),
-            residual_block_schedule=(2, 2, 2, 2), lowest_resolution=64,
-            cardinality=1, squeeze_and_excite=False)
-    single_channel_model.load_weights(weights_filename_single_channel)
-        
-    for i in range(len(model.layers)):
-        print("Transferring layer " + str(i))
-        if i == 1:
-            single_channel_layer_weights = single_channel_model.get_layer(index=i).get_weights()
-            single_channel_conv_weights = single_channel_layer_weights[0]
-            single_channel_bias_weights = single_channel_layer_weights[1]
-            
-            layer_weights = model.get_layer(index=i).get_weights()
-            conv_weights = layer_weights[0]
-            bias_weights = single_channel_bias_weights
-            
-            conv_weights[:,:,0,:] = single_channel_conv_weights[:,:,0,:]
-            model.get_layer(index=i).set_weights([conv_weights, bias_weights])                        
-        else:    
-            model.get_layer(index=i).set_weights(single_channel_model.get_layer(index=i).get_weights())
-    model.save_weights(weights_filename)        
-
-# model.compile(optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=1e-4),
-#               loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
-#               metrics=[tf.keras.metrics.BinaryAccuracy()])
-
 model.compile(optimizer=tf.keras.optimizers.legacy.SGD(lr=0.01, momentum=0.9, decay=1e-4),
               loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
               metrics=[tf.keras.metrics.BinaryAccuracy()])
