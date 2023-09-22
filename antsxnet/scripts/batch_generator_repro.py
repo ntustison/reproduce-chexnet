@@ -50,6 +50,7 @@ def batch_generator(batch_size,
                 image = ants.resample_image(image, image_size, use_voxels=True, interp_type=0)  
                 if len(image.shape) == 2 and image.components == 1 and image.shape == image_size: 
                     image_array = image.numpy()
+                    image_array = (image_array - image_array.min()) / (image_array.max() - image_array.min())
                     for c in range(number_of_channels):
                         X[batch_count,:,:,c] = (image_array - imagenet_mean[c]) / (imagenet_std[c])
                     for d in range(number_of_dx):    

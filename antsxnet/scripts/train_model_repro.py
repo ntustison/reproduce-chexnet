@@ -1,7 +1,7 @@
 import pandas as pd
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import tensorflow as tf
 import tensorflow.keras as keras
@@ -40,15 +40,20 @@ demo = pd.read_csv(base_directory + "nih_labels.csv", index_col=0)
 number_of_classification_labels = 14
 number_of_channels = 3
 
-model = tf.keras.applications.DenseNet121(include_top=True, 
-                                          weights=None, 
+model = tf.keras.applications.DenseNet121(include_top=False, 
+                                          weights="imagenet", 
                                           input_tensor=None, 
-                                          input_shape=None, 
-                                          pooling=None, 
+                                          input_shape=(224, 224, 3), 
+                                          pooling='avg', 
                                           classes=number_of_classification_labels, 
                                           classifier_activation='sigmoid')
+x = tf.keras.layers.Dense(units=number_of_classification_labels,
+                          activation='sigmoid')(model.output)                                           
+model = tf.keras.Model(inputs=model.input, outputs=x)
 
 weights_filename = scripts_directory + "chexnet_repro.h5"
+if os.path.exists(weights_filename):
+    model.load_weights(weights_filename)
 model.compile(optimizer=tf.keras.optimizers.legacy.SGD(learning_rate=0.01, momentum=0.9, decay=1e-4),
               loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
               metrics=[tf.keras.metrics.BinaryAccuracy()])
