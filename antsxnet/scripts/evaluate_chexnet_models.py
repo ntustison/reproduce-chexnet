@@ -119,3 +119,20 @@ else:
     auc_scores = auc_scores.reindex(sorted(auc_scores.columns), axis=1)  
     print(auc_scores.transpose())
 
+#                      Pytorch     Keras  ANTsXNet
+# Atelectasis         0.832871  0.822537  0.863367
+# Cardiomegaly        0.946268  0.938183  0.962786
+# Consolidation       0.816950  0.815728  0.855411
+# Edema               0.912380  0.915611  0.938205
+# Effusion            0.893323  0.891513  0.916355
+# Emphysema           0.906865  0.887093  0.920824
+# Fibrosis            0.834109  0.827323  0.868360
+# Hernia              0.882469  0.824022  0.919963
+# Infiltration        0.770469  0.769772  0.805857
+# Mass                0.875950  0.834911  0.893959
+# Nodule              0.788035  0.764380  0.823646
+# Pleural_Thickening  0.828046  0.814205  0.854000
+# Pneumonia           0.758576  0.751609  0.800324
+# Pneumothorax        0.880895  0.870271  0.910933
+
+
